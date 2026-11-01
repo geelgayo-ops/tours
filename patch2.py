@@ -1,0 +1,16 @@
+t=open('index.html').read()
+def R(a,b):
+    global t
+    assert a in t,a[:50]; t=t.replace(a,b,1)
+R('<option value="mahaneyehuda">שוק מחנה יהודה, ירושלים</option></select>','<option value="mahaneyehuda">שוק מחנה יהודה, ירושלים</option><optgroup label="הסיורים שלי" id="myGen"></optgroup><option value="new">🌍 סיור במקום חדש (בכל העולם)</option></select>\n<div id="newBox" style="display:none;margin-top:10px"><div class="note" style="font-weight:400;font-size:13px;background:#eff6ff;border-color:#60a5fa">🤖 סיור במקום חדש נוצר אוטומטית בעזרת בינה מלאכותית ממקומות אמיתיים במפה (OpenStreetMap). המידע עלול להכיל טעויות – בדקו לפני היציאה, שימו לב לבטיחות ולשעות פתיחה. באזורים שאינם עירוניים חלק מהמקומות עשויים להיות רחוקים יותר להליכה.</div>\n<div class="row"><button onclick="useGps()">📍 המיקום הנוכחי שלי</button></div><div style="display:flex;gap:6px;margin-top:8px"><input type="text" id="gq" placeholder="או חפשו מקום (למשל General Luna, Siargao)"><button onclick="geoSearch()">🔍</button></div><div id="gRes"></div><div id="gSel" style="margin-top:8px;font-weight:600"></div><div id="gNear"></div></div>')
+R('#chip{','#busy{position:fixed;inset:0;background:#fff7edee;z-index:2500;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:17px}\n.gr{padding:8px;border-bottom:1px solid #eee;cursor:pointer;font-size:14px}\n#chip{')
+R('<div id="toast"></div>','<div id="toast"></div><div id="busy"><div style="font-size:48px">🧭</div><div id="busyT">בונים לכם סיור…</div><small style="color:#666;margin-top:8px">מחפשים מקומות אמיתיים בסביבה וכותבים הדרכה – עד דקה</small></div>')
+R("$('sArea').onchange=e=>{su.area=e.target.value};","$('sArea').onchange=e=>{su.area=e.target.value;renderSetup()};")
+R("$('sArea').value=su.area;","renderMyGen();$('sArea').value=su.area;$('newBox').style.display=su.area==='new'?'':'none';if(su.area==='new'){$('gSel').textContent=su.loc?'📍 '+su.loc.name:''}")
+R("$('notice').textContent=su.lang==='he'?'':","$('notice').textContent=su.lang==='he'||(su.lang==='en'&&(su.area==='new'||String(su.area).startsWith('gen:')))?'':")
+R("function startTour(){","async function startTour(){if($('sArea').value==='new'){su.area='new';const g=await genTour();if(!g)return;su.area=g;renderMyGen();$('sArea').value=g}")
+R("loadTour((st.setup&&st.setup.area)||'talpiot');","loadTour((st.setup&&TOURS[st.setup.area]&&st.setup.area)||'talpiot');")
+R("const AREAS=","let AREAS=")
+GEN=open('gen.js').read()
+R("renderChip();openSetup();",GEN+"renderChip();openSetup();")
+open('index.html','w').write(t)
