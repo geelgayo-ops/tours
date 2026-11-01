@@ -47,11 +47,10 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid #ccc;border-radius
 #chip span{flex:1}#chip button{padding:5px 10px;border:1px solid #c2410c}
 </style></head><body>
 <header><button id="bHome" onclick="showHome()" style="padding:6px 8px;white-space:nowrap">→ ראשי</button><h1>🧺 שוק תלפיות – סיור משפחתי</h1><button id="bList">תחנות</button><button id="bRate" title="דרגו">⭐</button><button id="bFb" title="משוב">💬</button><button id="bMenu">⚙️</button></header>
-<div id="home"><div style="display:flex;align-items:center;justify-content:space-between"><h1>🚶 סיורים בהליכה</h1><small style="color:#999">v4</small></div>
+<div id="home"><div style="display:flex;align-items:center;justify-content:space-between"><h1>🚶 סיורים בהליכה</h1><small style="color:#999">v5</small></div>
 <div style="color:#555;margin-bottom:12px">סיורים מודרכים עם מפה, הדרכה והפעלות לכל תחנה</div>
 <button class="pri big" onclick="openNew()">➕ סיור חדש – בכל מקום בעולם</button>
-<input type="text" id="hq" placeholder="🔍 חיפוש סיור לפי מקום" oninput="renderHome()" style="margin-top:12px">
-<div id="hList"></div><div class="row" style="margin-top:18px"><button onclick="openFb()">💬 משוב על האפליקציה</button></div></div>
+<div class="fld" style="margin-top:14px"><b>📋 בחרו סיור מוכן</b><select id="hSel" onchange="renderHome()"></select><div id="hList"></div></div><div class="row" style="margin-top:18px"><button onclick="openFb()">💬 משוב על האפליקציה</button></div></div>
 <div id="setup" class="hidden"><button onclick="history.back()" style="border:1px solid #c2410c;margin-bottom:6px">→ חזרה</button><h2 id="setTitle"></h2>
 <div class="note">⚠️ הסיורים מיועדים כרגע לסיורי הליכה באזורים עירוניים בלבד. טיולים בטבע וסיורים ברכב יתווספו בעתיד.</div>
 <div class="fld" id="areaFld" style="display:none"><b>📍 אזור הסיור</b><select id="sArea"><option value="talpiot">שוק תלפיות, חיפה (משפחות)</option><option value="tlv">תל אביב – העיר הלבנה (מבוגרים)</option>
@@ -162,7 +161,7 @@ function kidsOn(){return !st.setup||st.setup.kids>0||st.setup.showKids}
 function renderChip(){const s=st.setup;if(!s){$('chip').style.display='none';return}$('chip').style.display='';
  const ag=s.ages.filter(Boolean);$('chipTxt').textContent=`📍 ${AREAS[s.area]} · ⏱️ ${DURS.find(d=>d[0]===s.dur)[1]} · 🗣️ ${LANGS.find(l=>l[0]===s.lang)[1]} · 👤${s.adults} 🧒${s.kids}${ag.length?' ('+ag.join(', ')+')':''}`}
 
-const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-4';
+const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-5';
 const SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'tours-auth'}}):null;
 let user=null;if(SB){SB.auth.getSession().then(r=>{user=r.data.session?.user||null});SB.auth.onAuthStateChange((e,s)=>{user=s?.user||null;if($('menu').classList.contains('open'))renderMenu()})}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3000)}
@@ -240,13 +239,19 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 async function loadStats(){if(!SB)return;try{const [a,b]=await Promise.all([SB.from('tour_stats').select('*'),SB.from('tours_generated').select('id,title,place,lat,lng,lang,duration,stations,route,created_at').order('created_at',{ascending:false}).limit(40)]);
  STATS=Object.fromEntries((a.data||[]).map(x=>[x.tour,x]));COMM=(b.data||[]).filter(g=>!GEN[g.id]);COMM.forEach(regGen)}catch(e){console.warn(e)}renderHome()}
 function card(k){const T=TOURS[k];if(!T)return'';const s=STATS[k],p=st.tours[k];
- return `<div class="tc" data-q="${esc((T.name+' '+T.title).toLowerCase())}"><div onclick="openTourSetup('${k}')" style="cursor:pointer"><b>${esc(T.title)}</b><div class="tm">📍 ${esc(T.name)} · ${T.stations.length} תחנות${km(k)?' · 🚶 '+km(k):''}${p&&p.visited&&p.visited.length?` · ✓ ${p.visited.length} בוקרו`:''}</div>
+ return `<div class="tc" data-q="${esc((T.name+' '+T.title).toLowerCase())}"><div onclick="openTourSetup('${k}')" style="cursor:pointer"><b>${esc(dname(k))}</b><div class="tm">📍 ${esc(T.name)} · ${T.stations.length} תחנות${km(k)?' · 🚶 '+km(k):''}${p&&p.visited&&p.visited.length?` · ✓ ${p.visited.length} בוקרו`:''}</div>
  <div class="tm">${s?`⭐ ${s.avg} (${s.n} ${s.n==1?'דירוג':'דירוגים'})`:'עדיין אין דירוגים'}${T.gen?' · 🤖 נוצר ב-AI':''}</div></div>
  <div class="row" style="margin-top:6px"><button class="pri" onclick="openTourSetup('${k}')">יוצאים לסיור</button><button onclick="openRevs('${k}')">⭐ דירוגים וביקורות</button></div></div>`}
-function renderHome(){const q=($('hq').value||'').trim().toLowerCase();
+const CITY={talpiot:'חיפה – שוק תלפיות',tlv:'תל אביב – העיר הלבנה',germancolony:'חיפה – המושבה הגרמנית',jaffa:'תל אביב-יפו – יפו העתיקה',mahaneyehuda:'ירושלים – שוק מחנה יהודה'};
+function dname(k){if(CITY[k])return CITY[k];const T=TOURS[k];const pl=String(T.name||'').split(',')[0].trim();return pl+' – '+String(T.title).replace(/^🌍\s*/,'')}
+function renderHome(){const sel=$('hSel'),cur=sel.value;
+ const grp=(lab,ks)=>{ks=ks.filter(k=>TOURS[k]).sort((a,b)=>dname(a).localeCompare(dname(b),'he'));return ks.length?`<optgroup label="${lab}">`+ks.map(k=>`<option value="${k}">${esc(dname(k))}</option>`).join('')+'</optgroup>':''};
+ sel.innerHTML='<option value="">— בחרו סיור —</option>'+grp('סיורים מומלצים',CUR)+grp('הסיורים שלי',Object.keys(GEN).map(i=>'gen:'+i))+grp('סיורי הקהילה (AI)',COMM.map(g=>'gen:'+g.id));
+ if(cur&&TOURS[cur])sel.value=cur;$('hList').innerHTML=sel.value?card(sel.value):'<div class="tm" style="margin-top:8px">'+(sel.options.length-1)+' סיורים זמינים</div>';return;
+
  const sec=(t,ks)=>{ks=ks.filter(k=>TOURS[k]);return ks.length?`<h3>${t}</h3>`+ks.map(card).join(''):''};
  $('hList').innerHTML=sec('סיורים מומלצים',CUR)+sec('הסיורים שלי',Object.keys(GEN).map(i=>'gen:'+i))+sec('סיורי הקהילה (נוצרו ב-AI)',COMM.map(g=>'gen:'+g.id));
- if(q)document.querySelectorAll('.tc').forEach(c=>c.style.display=c.dataset.q.includes(q)?'':'none')}
+ if(0)document.querySelectorAll('.tc').forEach(c=>c.style.display=c.dataset.q.includes(q)?'':'none')}
 function showHome(push){hideAll();$('setup').classList.add('hidden');$('home').style.display='block';renderHome();if(push!==false&&history.state&&history.state.v!=='home')history.pushState({v:'home'},'')}
 function ensureOpt(k){if(![...$('sArea').options].some(o=>o.value===k)){const o=document.createElement('option');o.value=k;o.textContent=TOURS[k].name;$('sArea').appendChild(o)}}
 function openTourSetup(k){ensureOpt(k);su=JSON.parse(JSON.stringify(st.setup||su));su.area=k;MODE='tour';$('home').style.display='none';renderSetup();
