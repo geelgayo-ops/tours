@@ -43,13 +43,13 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid #ccc;border-radius
 #chip span{flex:1}#chip button{padding:5px 10px;border:1px solid #c2410c}
 </style></head><body>
 <header><h1>🧺 שוק תלפיות – סיור משפחתי</h1><button id="bList">תחנות</button><button id="bFb" title="משוב">💬</button><button id="bMenu">⚙️</button></header>
-<div id="setup" class="hidden"><h2>🧭 בואו נתכנן את הסיור</h2>
+<div id="setup" class="hidden"><h2>🧭 בואו נתכנן את הסיור <small style="font-size:11px;color:#999;font-weight:400">v3</small></h2>
 <div class="note">⚠️ הסיורים מיועדים כרגע לסיורי הליכה באזורים עירוניים בלבד. טיולים בטבע וסיורים ברכב יתווספו בעתיד.</div>
 <div class="fld"><b>📍 אזור הסיור</b><select id="sArea"><option value="talpiot">שוק תלפיות, חיפה (משפחות)</option><option value="tlv">תל אביב – העיר הלבנה (מבוגרים)</option>
 <option value="germancolony">המושבה הגרמנית, חיפה</option><option value="jaffa">יפו העתיקה</option><option value="mahaneyehuda">שוק מחנה יהודה, ירושלים</option><optgroup label="הסיורים שלי" id="myGen"></optgroup><option value="new">🌍 סיור במקום חדש (בכל העולם)</option></select>
 <div id="newBox" style="display:none;margin-top:10px"><div class="note" style="font-weight:400;font-size:13px;background:#eff6ff;border-color:#60a5fa">🤖 סיור במקום חדש נוצר אוטומטית בעזרת בינה מלאכותית ממקומות אמיתיים במפה (OpenStreetMap). המידע עלול להכיל טעויות – בדקו לפני היציאה, שימו לב לבטיחות ולשעות פתיחה. באזורים שאינם עירוניים חלק מהמקומות עשויים להיות רחוקים יותר להליכה.</div>
-<div class="row"><button onclick="useGps()">📍 המיקום הנוכחי שלי</button></div><div style="display:flex;gap:6px;margin-top:8px"><input type="text" id="gq" placeholder="או חפשו מקום (למשל General Luna, Siargao)"><button onclick="geoSearch()">🔍</button></div><div id="gRes"></div><div id="gSel" style="margin-top:8px;font-weight:600"></div><div id="gNear"></div></div>
-<input type="text" id="sReq" placeholder="בקשו אזור חדש (למשל: נחלת בנימין, תל אביב)" style="margin-top:8px"><div id="reqOk" style="font-size:13px;color:#16a34a"></div></div>
+<div class="row"><button onclick="useGps()">📍 המיקום הנוכחי שלי</button></div><div style="display:flex;gap:6px;margin-top:8px"><input type="text" id="gq" placeholder="או חפשו מקום (למשל General Luna, Siargao)"><button onclick="geoSearch()">🔍</button></div><div id="gRes"></div><div id="gSel" style="margin-top:8px;font-weight:600"></div><div id="gErr" style="color:#b91c1c;font-weight:600;margin-top:6px"></div><div id="gNear"></div></div>
+<input type="text" id="sReq" placeholder="מקום אחר? הקלידו כאן (למשל Manhattan, New York)" style="margin-top:8px"><div id="reqOk" style="font-size:13px;color:#16a34a"></div></div>
 <div class="fld"><b>⏱️ משך הסיור</b><div class="seg" id="sDur"></div><div id="durNote" style="font-size:13px;color:#666;margin-top:6px"></div></div>
 <div class="fld"><b>🗣️ שפת ההדרכה</b><div class="seg" id="sLang"></div><div id="notice"></div></div>
 <div class="fld"><b>👨‍👩‍👧‍👦 משתתפים</b>
@@ -146,14 +146,14 @@ function renderSetup(){
  $('ages').innerHTML=su.kids?'גילאי הילדים (לא חובה): '+su.ages.map((a,i)=>`<input type="number" min="1" max="17" value="${a}" oninput="su.ages[${i}]=this.value" placeholder="גיל">`).join(''):'';
  $('kidOpt').innerHTML=su.kids?'':`<input type="checkbox" ${su.showKids?'checked':''} onchange="su.showKids=this.checked"> להציג בכל זאת משימות לילדים`;
  renderMyGen();$('sArea').value=su.area;$('newBox').style.display=su.area==='new'?'':'none';if(su.area==='new'){$('gSel').textContent=su.loc?'📍 '+su.loc.name:''}$('sReq').value=su.req||''}
-$('sArea').onchange=e=>{su.area=e.target.value;renderSetup()};$('sReq').onchange=e=>{su.req=e.target.value.trim();$('reqOk').textContent=su.req?'✓ הבקשה נשמרה – נעדכן כשהאזור יהיה זמין':''};
+$('sArea').onchange=e=>{su.area=e.target.value;renderSetup()};$('sReq').oninput=e=>{const v=e.target.value.trim();if(v){su.area='new';$('sArea').value='new';$('newBox').style.display='';$('gq').value=v;su.loc=null;$('gSel').textContent='';$('gNear').innerHTML=''}};$('sReq').onchange=e=>{su.req=e.target.value.trim();$('reqOk').textContent=su.req?'✓ הבקשה נשמרה – נעדכן כשהאזור יהיה זמין':''};
 function openSetup(){hideAll();su=JSON.parse(JSON.stringify(st.setup||su));renderSetup();$('setup').classList.remove('hidden')}
 async function startTour(){if($('sArea').value==='new'){su.area='new';const g=await genTour();if(!g)return;su.area=g;renderMyGen();$('sArea').value=g}if(su.req&&su.req!==(st.setup||{}).req)send('tour_feedback',{tour:null,free_text:'בקשת אזור: '+su.req,req_area:su.req});su.area=$('sArea').value;if(su.kids>0)su.showKids=true;loadTour(su.area);st.setup=JSON.parse(JSON.stringify(su));save();$('setup').classList.add('hidden');renderChip();setTimeout(()=>map.invalidateSize(),50)}
 function kidsOn(){return !st.setup||st.setup.kids>0||st.setup.showKids}
 function renderChip(){const s=st.setup;if(!s){$('chip').style.display='none';return}$('chip').style.display='';
  const ag=s.ages.filter(Boolean);$('chipTxt').textContent=`📍 ${AREAS[s.area]} · ⏱️ ${DURS.find(d=>d[0]===s.dur)[1]} · 🗣️ ${LANGS.find(l=>l[0]===s.lang)[1]} · 👤${s.adults} 🧒${s.kids}${ag.length?' ('+ag.join(', ')+')':''}`}
 
-const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-1';
+const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-3';
 const SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'tours-auth'}}):null;
 let user=null;if(SB){SB.auth.getSession().then(r=>{user=r.data.session?.user||null});SB.auth.onAuthStateChange((e,s)=>{user=s?.user||null;if($('menu').classList.contains('open'))renderMenu()})}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3000)}
@@ -180,14 +180,17 @@ function openFb(keep){if(!keep)fbv={stars:0};else fbv.text=$('fT').value;hideAll
 async function sendFb(){const tx=$('fT').value.trim();if(!tx&&!fbv.stars){toast('כתבו משהו או בחרו ציון');return}
  const ok=await send('tour_feedback',{tour:TOUR,station:openN||st.cur,stars:fbv.stars||null,free_text:tx.slice(0,4000),req_area:(st.setup&&st.setup.req)||null});hide('fb');toast(ok?'תודה! המשוב נשלח':'נשמר במכשיר – יישלח כשיהיה חיבור')}
 $('bFb').onclick=()=>openFb();
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update());let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!rl&&navigator.serviceWorker.controller){rl=1;if(!$('busy')||$('busy').style.display!=='flex')location.reload()}})}
 const GK='tours_gen_v1';let GEN=JSON.parse(localStorage.getItem(GK)||'{}');
 function regGen(g){TOURS['gen:'+g.id]={name:g.place||g.title,title:'🌍 '+g.title,stations:g.stations,route:g.route?{coords:g.route.coords,dist:g.route.dist}:null,gen:1};AREAS['gen:'+g.id]=g.place||g.title}
 Object.values(GEN).forEach(regGen);
 function renderMyGen(){$('myGen').innerHTML=Object.values(GEN).map(g=>`<option value="gen:${g.id}">🌍 ${g.title}</option>`).join('');$('myGen').style.display=Object.keys(GEN).length?'':'none'}
 const UA_H={'Accept-Language':'en'};
+$('gq').addEventListener('input',()=>{su.loc=null;$('gSel').textContent='';$('gErr').textContent=''});$('gq').addEventListener('keydown',e=>{if(e.key==='Enter')geoSearch()});
+function gErr(m){$('gErr').textContent=m?'⚠️ '+m:'';if(m){toast(m);$('gErr').scrollIntoView({block:'center'})}}
+async function geocode(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q='+encodeURIComponent(q),{headers:UA_H});if(!r.ok)throw new Error('geocode '+r.status);return r.json()}
 async function geoSearch(){const q=$('gq').value.trim();if(!q)return;$('gRes').textContent='מחפש…';
- try{const r=await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q='+encodeURIComponent(q),{headers:UA_H})).json();
+ try{const r=await geocode(q);
   window._gr=r;$('gRes').innerHTML=r.length?r.map((x,i)=>`<div class="gr" onclick="pickLoc(+_gr[${i}].lat,+_gr[${i}].lon,_gr[${i}].display_name)">📍 ${x.display_name}</div>`).join(''):'לא נמצא – נסו ניסוח אחר באנגלית'}catch(e){$('gRes').textContent='שגיאת חיפוש'}}
 function useGps(){if(!navigator.geolocation){toast('אין GPS בדפדפן');return}$('gSel').textContent='מאתר מיקום…';
  navigator.geolocation.getCurrentPosition(async p=>{const la=p.coords.latitude,lo=p.coords.longitude;let nm=`${la.toFixed(4)}, ${lo.toFixed(4)}`;
@@ -208,14 +211,19 @@ async function clientPois(la,lo){const out=[],seen=new Set(),add=(name,lat,lng,k
   for(const k of ['museum','monument','church','market','park','plaza','beach','viewpoint','pier','town hall']){try{$('busyT').textContent='מחפשים מקומות בסביבה… ('+k+')';
    (await (await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=12&bounded=1&viewbox=${vb}&q=${encodeURIComponent(k)}`,{headers:UA_H})).json()).forEach(x=>{if(!/resort|hotel|guest_house|hostel|restaurant/.test(x.type))add(x.name,+x.lat,+x.lon,x.type)})}catch(e){}await new Promise(r=>setTimeout(r,1000))}}
  window.__lastPois=out;return out}
-async function genTour(){if(!su.loc){toast('בחרו מיקום נוכחי או חפשו מקום');return null}
+async function genTour(){gErr('');
+ if(!su.loc){const q=$('gq').value.trim();if(!q){gErr('בחרו "המיקום הנוכחי שלי" או הקלידו מקום');return null}
+  $('busy').style.display='flex';$('busyT').textContent='מאתרים את "'+q+'"…';
+  try{const r=await geocode(q);if(!r.length){gErr('לא מצאנו את "'+q+'" – נסו ניסוח אחר (באנגלית)');return null}
+   const x=r[0];let la=+x.lat,lo=+x.lon;su.loc={lat:la,lng:lo,name:String(x.display_name).split(',').slice(0,3).join(',').trim()};$('gSel').textContent='📍 '+su.loc.name}
+  catch(e){gErr('חיפוש המקום נכשל ('+e.message+') – בדקו חיבור ונסו שוב');return null}finally{$('busy').style.display='none'}}
  $('busy').style.display='flex';$('busyT').textContent='מחפשים מקומות בסביבה…';
  try{const pois=await clientPois(su.loc.lat,su.loc.lng);$('busyT').textContent='כותבים את ההדרכה לכל תחנה…';
   const {data,error}=await SB.functions.invoke('tour-ai',{body:{lat:su.loc.lat,lng:su.loc.lng,place:su.loc.name,dur:su.dur,lang:su.lang==='en'?'en':'he',adults:su.adults,kids:su.kids,ages:su.ages,pois}});
   if(error||!data||data.error){let m=data&&data.error;try{m=m||(await error.context.json()).error}catch(e){}window.__genErr=m||String(error);
-   toast(m==='rate_limit'?'הגעתם למגבלת הסיורים היומית – נסו מחר':m==='not_enough_places'?'לא נמצאו מספיק מקומות מעניינים בסביבה – נסו מקום אחר':'יצירת הסיור נכשלה, נסו שוב');return null}
+   gErr(m==='rate_limit'?'הגעתם למגבלת הסיורים היומית – נסו מחר':m==='not_enough_places'?'לא נמצאו מספיק מקומות מעניינים בסביבה – נסו מקום אחר':'יצירת הסיור נכשלה ('+(m||'שגיאת שרת')+'), נסו שוב');return null}
   GEN[data.id]=data;localStorage.setItem(GK,JSON.stringify(GEN));regGen(data);window.__gen=data;return 'gen:'+data.id}
- catch(e){window.__genErr=String(e);toast('יצירת הסיור נכשלה: '+e.message);return null}finally{$('busy').style.display='none'}}
+ catch(e){window.__genErr=String(e);gErr('יצירת הסיור נכשלה: '+e.message);return null}finally{$('busy').style.display='none'}}
 renderChip();openSetup();
 loadTour((st.setup&&TOURS[st.setup.area]&&st.setup.area)||'talpiot');setupGeo();
 </script></body></html>

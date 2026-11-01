@@ -14,3 +14,26 @@ R("const AREAS=","let AREAS=")
 GEN=open('gen.js').read()
 R("renderChip();openSetup();",GEN+"renderChip();openSetup();")
 open('index.html','w').write(t)
+# --- v3 fixes: Manhattan bug
+t=open('index.html').read()
+R('placeholder="בקשו אזור חדש (למשל: נחלת בנימין, תל אביב)"','placeholder="מקום אחר? הקלידו כאן (למשל Manhattan, New York)"')
+R("$('sReq').onchange=e=>{","$('sReq').oninput=e=>{const v=e.target.value.trim();if(v){su.area='new';$('sArea').value='new';$('newBox').style.display='';$('gq').value=v;su.loc=null;$('gSel').textContent='';$('gNear').innerHTML=''}};$('sReq').onchange=e=>{")
+R('<div id="gSel" style="margin-top:8px;font-weight:600"></div>','<div id="gSel" style="margin-top:8px;font-weight:600"></div><div id="gErr" style="color:#b91c1c;font-weight:600;margin-top:6px"></div>')
+R("async function geoSearch(){","$('gq').addEventListener('input',()=>{su.loc=null;$('gSel').textContent='';$('gErr').textContent=''});$('gq').addEventListener('keydown',e=>{if(e.key==='Enter')geoSearch()});\nfunction gErr(m){$('gErr').textContent=m?'⚠️ '+m:'';if(m){toast(m);$('gErr').scrollIntoView({block:'center'})}}\nasync function geocode(q){const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q='+encodeURIComponent(q),{headers:UA_H});if(!r.ok)throw new Error('geocode '+r.status);return r.json()}\nasync function geoSearch(){")
+R("const r=await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q='+encodeURIComponent(q),{headers:UA_H})).json();","const r=await geocode(q);")
+R("async function genTour(){if(!su.loc){toast('בחרו מיקום נוכחי או חפשו מקום');return null}",
+"""async function genTour(){gErr('');
+ if(!su.loc){const q=$('gq').value.trim();if(!q){gErr('בחרו "המיקום הנוכחי שלי" או הקלידו מקום');return null}
+  $('busy').style.display='flex';$('busyT').textContent='מאתרים את "'+q+'"…';
+  try{const r=await geocode(q);if(!r.length){gErr('לא מצאנו את "'+q+'" – נסו ניסוח אחר (באנגלית)');return null}
+   const x=r[0];let la=+x.lat,lo=+x.lon;su.loc={lat:la,lng:lo,name:String(x.display_name).split(',').slice(0,3).join(',').trim()};$('gSel').textContent='📍 '+su.loc.name}
+  catch(e){gErr('חיפוש המקום נכשל ('+e.message+') – בדקו חיבור ונסו שוב');return null}finally{$('busy').style.display='none'}}""")
+R("toast(m==='rate_limit'?","gErr(m==='rate_limit'?")
+R("catch(e){window.__genErr=String(e);toast('יצירת הסיור נכשלה: '+e.message)","catch(e){window.__genErr=String(e);gErr('יצירת הסיור נכשלה: '+e.message)")
+R("'יצירת הסיור נכשלה, נסו שוב');return null}","'יצירת הסיור נכשלה ('+(m||'שגיאת שרת')+'), נסו שוב');return null}")
+# SW auto-reload on update
+R("if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js');",
+"if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update());let rl=0;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!rl&&navigator.serviceWorker.controller){rl=1;if(!$('busy')||$('busy').style.display!=='flex')location.reload()}})}")
+R("VER='tours-1'","VER='tours-3'")
+R('<h2>🧭 בואו נתכנן את הסיור</h2>','<h2>🧭 בואו נתכנן את הסיור <small style="font-size:11px;color:#999;font-weight:400">v3</small></h2>')
+open('index.html','w').write(t)
