@@ -60,3 +60,4 @@ R("function startTour(){","function startTour(){if(su.req&&su.req!==(st.setup||{
 t=t.replace("st.tours=st.tours||{}","st.tours=st.tours||{}",1)
 open('index.html','w').write(t)
 exec(open('patch2.py').read())
+exec(open('patch3.py').read())
