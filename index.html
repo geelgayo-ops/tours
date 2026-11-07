@@ -43,13 +43,22 @@ textarea{width:100%;font:inherit;padding:8px;border:1px solid #ccc;border-radius
 .tc{background:#fff;border-radius:14px;padding:12px;margin:8px 0;box-shadow:0 1px 5px #0002}.tc b{font-size:16px}.tm{font-size:13px;color:#555;margin-top:3px}
 .big{width:100%;padding:16px;font-size:19px;border-radius:14px;box-shadow:0 3px 10px #c2410c55}.rvi{border-bottom:1px solid #eee;padding:8px 0}
 #rev,#revs,#fb{z-index:2600}header h1{font-size:15px}header button{padding:6px 9px}
+.sayrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}
+.sayrow b{flex:1}
+button.say{flex:none;padding:6px 10px;font-size:14px;border:1px solid #c2410c;white-space:nowrap}
+button.say.on{background:#c2410c;color:#fff}
+.narrline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#444;margin:2px 0 8px}
+.narrline select{width:auto;max-width:100%;padding:4px 8px;font:inherit;border:1px solid #ccc;border-radius:8px;background:#fff}
+.narrhint{font-size:13px;color:#666;margin-top:6px}
+#narrHome label,.narlab{display:flex;align-items:center;gap:6px;margin-top:8px;font-weight:400}
 #chip{position:fixed;bottom:14px;right:10px;left:10px;z-index:900;background:#fff;border-radius:20px;box-shadow:0 2px 8px #0004;padding:6px 8px 6px 12px;display:flex;align-items:center;gap:8px;font-size:13px}
 #chip span{flex:1}#chip button{padding:5px 10px;border:1px solid #c2410c}
 </style></head><body>
 <header><button id="bHome" onclick="showHome()" style="padding:6px 8px;white-space:nowrap">→ ראשי</button><h1>🧺 שוק תלפיות – סיור משפחתי</h1><button id="bList">תחנות</button><button id="bRate" title="דרגו">⭐</button><button id="bFb" title="משוב">💬</button><button id="bMenu">⚙️</button></header>
-<div id="home"><div style="display:flex;align-items:center;justify-content:space-between"><h1>🚶 סיורים בהליכה</h1><small style="color:#999">v5</small></div>
-<div style="color:#555;margin-bottom:12px">סיורים מודרכים עם מפה, הדרכה והפעלות לכל תחנה</div>
+<div id="home"><div style="display:flex;align-items:center;justify-content:space-between"><h1>🚶 סיורים בהליכה</h1><small style="color:#999">v6</small></div>
+<div style="color:#555;margin-bottom:12px">סיורים מודרכים עם מפה, הדרכה מוקראת והפעלות לכל תחנה</div>
 <button class="pri big" onclick="openNew()">➕ סיור חדש – בכל מקום בעולם</button>
+<div class="fld" id="narrHome"></div>
 <div class="fld" style="margin-top:14px"><b>📋 בחרו סיור מוכן</b><select id="hSel" onchange="renderHome()"></select><div id="hList"></div></div><div class="row" style="margin-top:18px"><button onclick="openFb()">💬 משוב על האפליקציה</button></div></div>
 <div id="setup" class="hidden"><button onclick="history.back()" style="border:1px solid #c2410c;margin-bottom:6px">→ חזרה</button><h2 id="setTitle"></h2>
 <div class="note">⚠️ הסיורים מיועדים כרגע לסיורי הליכה באזורים עירוניים בלבד. טיולים בטבע וסיורים ברכב יתווספו בעתיד.</div>
@@ -82,7 +91,7 @@ const map=L.map('map',{zoomControl:false}).setView([32.8124,34.9995],18);
 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'}).addTo(map);
 let line=null,markers={},layer=L.layerGroup().addTo(map);
 function icon(s){return L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,15],html:`<div class="num ${st.visited.includes(s.n)?'v':''} ${st.cur===s.n?'cur':''}">${st.visited.includes(s.n)?'✓':s.n}</div>`})}
-function loadTour(t){if(!TOURS[t])t='talpiot';TOUR=t;const T=TOURS[t];STATIONS=T.stations;ROUTE=T.route;
+function loadTour(t){narrStop();if(!TOURS[t])t='talpiot';TOUR=t;const T=TOURS[t];STATIONS=T.stations;ROUTE=T.route;
  const p=st.tours[t]||{visited:[],cur:1};st.visited=p.visited;st.cur=p.cur;st.radius=p.radius||T.radius||30;lastAuto=null;
  layer.clearLayers();markers={};hide('card');hide('list');
  line=L.polyline(ROUTE?ROUTE.coords:STATIONS.map(s=>[s.lat,s.lng]),{color:'#c2410c',weight:5,opacity:.8,dashArray:ROUTE?null:'8 8'}).addTo(layer);
@@ -93,19 +102,21 @@ function loadTour(t){if(!TOURS[t])t='talpiot';TOUR=t;const T=TOURS[t];STATIONS=T
  map.invalidateSize();map.fitBounds(line.getBounds(),{padding:[40,40]});save();refresh()}
 const refresh=()=>{STATIONS.forEach(s=>markers[s.n].setIcon(icon(s)));renderList()};
 const byN=n=>STATIONS.find(s=>s.n===n);
-function openCard(n,auto){const s=byN(n);openN=n;st.cur=n;save();['list','menu','rev','fb'].forEach(hide);
+function openCard(n,auto){const prevOpen=openN;const s=byN(n);openN=n;st.cur=n;save();['list','menu','rev','fb'].forEach(hide);
  const v=st.visited.includes(n);
  $('card').innerHTML=`<button class="close" onclick="hide('card')">✕</button>
  <div style="color:#888;font-size:13px">תחנה ${n} מתוך ${STATIONS.length}${auto?' · הגעתם! 📍':''}</div><h2>${s.name}</h2>
  <div style="font-size:13px;color:#555">📍 ${s.where}<br>🚶 ${s.dir}</div>
  <div class="box vid">▶️ סרטון התחנה (בקרוב)<br><small style="opacity:.8">${s.video}</small></div>
- <div class="box par"><b>👨‍👩‍👧‍👦 להורים:</b><br>${s.parents}</div>
- ${s.kids&&kidsOn()?`<div class="box kid"><b>🧒 משימה לילדים:</b><br>${s.kids}</div>`:''}${s.q?`<div class="box kid"><b>❓ שאלת התבוננות:</b><br>${s.q}</div>`:''}
+ ${narrCardLine()}
+ ${narrParentsBox(s)}
+ ${narrKidsBox(s)}
+ ${narrQBox(s)}
  <div class="strip">${STATIONS.map(x=>`<div class="num ${st.visited.includes(x.n)?'v':''} ${x.n===n?'cur':''}" onclick="jump(${x.n})">${st.visited.includes(x.n)?'✓':x.n}</div>`).join('')}</div>
  <div class="row">${n>1?`<button onclick="jump(${n-1})">→ הקודמת</button>`:''}${n<STATIONS.length?`<button class="pri" onclick="goNext(${n})">הבאה ←</button>`:`<button class="pri" onclick="markVisited(${n});openReview()">🎉 סיום ודירוג</button>`}</div>
  <div class="row"><button onclick="toggleVisit(${n})">${v?'↩️ בטל סימון':'✅ סמן כבוקר'}</button>
  <button onclick="showList()">📋 רשימת תחנות</button></div>`;
- show('card');refresh()}
+ show('card');refresh();narrAfterCard(prevOpen,n)}
 function markerTap(n){const s=byN(n);if(st.sim){onPos(s.lat,s.lng);if(openN!==n)openCard(n,true)}else openCard(n)}
 function markVisited(n){if(!st.visited.includes(n)){st.visited.push(n);save();refresh()}}
 function toggleVisit(n){st.visited.includes(n)?st.visited=st.visited.filter(x=>x!==n):st.visited.push(n);save();openCard(n)}
@@ -115,9 +126,10 @@ function renderList(){$('list').innerHTML=`<button class="close" onclick="hide('
 function jump(n){const s=byN(n);map.flyTo([s.lat,s.lng],18,{duration:.6});openCard(n)}
 function hideAll(){['card','list','menu','rev','fb','revs'].forEach(hide)}
 function showList(){hideAll();renderList();show('list')}
-function show(id){$(id).classList.add('open')}function hide(id){$(id).classList.remove('open');if(id==='card')openN=null}
+function show(id){$(id).classList.add('open')}function hide(id){$(id).classList.remove('open');if(id==='card'){openN=null;narrStop()}}
 function status(t){$('status').textContent=t}
 function renderMenu(){$('menu').innerHTML=`<button class="close" onclick="hide('menu')">✕</button><h2>הגדרות</h2>
+ <div class="fld">${narrPanelHtml()}</div>
  <p><label><input type="checkbox" id="simCb" ${st.sim?'checked':''}> מצב הדגמה – הקישו על המפה כדי לקבוע מיקום מדומה</label></p>
  <p><label>רדיוס הגעה לתחנה: <b id="rv">${st.radius}</b> מ'<br><input type="range" min="10" max="100" step="5" value="${st.radius}" id="rad" style="width:100%"></label></p>
  <div class="fld" id="acct">${user?`מחובר/ת: <b>${user.email}</b> <button onclick="SB.auth.signOut()">יציאה</button>`:`<b>כניסה עם אימייל (לא חובה)</b><input type="text" id="em" placeholder="email@example.com" dir="ltr"><div class="row"><button onclick="sendCode()">שלחו לי קוד</button></div><input type="text" id="code" placeholder="קוד מהמייל" dir="ltr" inputmode="numeric" style="margin-top:6px"><div class="row"><button class="pri" onclick="verify()">כניסה</button></div>`}</div>
@@ -161,7 +173,7 @@ function kidsOn(){return !st.setup||st.setup.kids>0||st.setup.showKids}
 function renderChip(){const s=st.setup;if(!s){$('chip').style.display='none';return}$('chip').style.display='';
  const ag=s.ages.filter(Boolean);$('chipTxt').textContent=`📍 ${AREAS[s.area]} · ⏱️ ${DURS.find(d=>d[0]===s.dur)[1]} · 🗣️ ${LANGS.find(l=>l[0]===s.lang)[1]} · 👤${s.adults} 🧒${s.kids}${ag.length?' ('+ag.join(', ')+')':''}`}
 
-const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-5';
+const SB_URL='https://hsfopkplkgszmcugfary.supabase.co',SB_KEY='sb_publishable_oQeqPgHura1h0L8EtlfOFg_IKvvUUhb',VER='tours-6';
 const SB=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,storageKey:'tours-auth'}}):null;
 let user=null;if(SB){SB.auth.getSession().then(r=>{user=r.data.session?.user||null});SB.auth.onAuthStateChange((e,s)=>{user=s?.user||null;if($('menu').classList.contains('open'))renderMenu()})}
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3000)}
@@ -247,12 +259,12 @@ function dname(k){if(CITY[k])return CITY[k];const T=TOURS[k];const pl=String(T.n
 function renderHome(){const sel=$('hSel'),cur=sel.value;
  const grp=(lab,ks)=>{ks=ks.filter(k=>TOURS[k]).sort((a,b)=>dname(a).localeCompare(dname(b),'he'));return ks.length?`<optgroup label="${lab}">`+ks.map(k=>`<option value="${k}">${esc(dname(k))}</option>`).join('')+'</optgroup>':''};
  sel.innerHTML='<option value="">— בחרו סיור —</option>'+grp('סיורים מומלצים',CUR)+grp('הסיורים שלי',Object.keys(GEN).map(i=>'gen:'+i))+grp('סיורי הקהילה (AI)',COMM.map(g=>'gen:'+g.id));
- if(cur&&TOURS[cur])sel.value=cur;$('hList').innerHTML=sel.value?card(sel.value):'<div class="tm" style="margin-top:8px">'+(sel.options.length-1)+' סיורים זמינים</div>';return;
+ if(cur&&TOURS[cur])sel.value=cur;$('hList').innerHTML=sel.value?card(sel.value):'<div class="tm" style="margin-top:8px">'+(sel.options.length-1)+' סיורים זמינים</div>';narrMount();return;
 
  const sec=(t,ks)=>{ks=ks.filter(k=>TOURS[k]);return ks.length?`<h3>${t}</h3>`+ks.map(card).join(''):''};
  $('hList').innerHTML=sec('סיורים מומלצים',CUR)+sec('הסיורים שלי',Object.keys(GEN).map(i=>'gen:'+i))+sec('סיורי הקהילה (נוצרו ב-AI)',COMM.map(g=>'gen:'+g.id));
  if(0)document.querySelectorAll('.tc').forEach(c=>c.style.display=c.dataset.q.includes(q)?'':'none')}
-function showHome(push){hideAll();$('setup').classList.add('hidden');$('home').style.display='block';renderHome();if(push!==false&&history.state&&history.state.v!=='home')history.pushState({v:'home'},'')}
+function showHome(push){narrStop();hideAll();$('setup').classList.add('hidden');$('home').style.display='block';renderHome();if(push!==false&&history.state&&history.state.v!=='home')history.pushState({v:'home'},'')}
 function ensureOpt(k){if(![...$('sArea').options].some(o=>o.value===k)){const o=document.createElement('option');o.value=k;o.textContent=TOURS[k].name;$('sArea').appendChild(o)}}
 function openTourSetup(k){ensureOpt(k);su=JSON.parse(JSON.stringify(st.setup||su));su.area=k;MODE='tour';$('home').style.display='none';renderSetup();
  $('setTitle').innerHTML=`🧭 ${esc(TOURS[k].title)}<div class="tm">📍 ${esc(TOURS[k].name)} · ${TOURS[k].stations.length} תחנות</div>`;$('setup').classList.remove('hidden');history.pushState({v:'setup'},'')}
@@ -263,6 +275,290 @@ async function openRevs(k){RVT=k;hideAll();$('revs').innerHTML=`<button class="c
  let L=[];if(SB){const {data}=await SB.from('tour_reviews_public').select('stars,review,created_at').eq('tour',k).order('created_at',{ascending:false}).limit(30);L=data||[]}
  const s=STATS[k];$('rvL').innerHTML=(s?`<div style="font-size:15px;margin:4px 0">ממוצע ⭐ ${s.avg} מתוך 5 · ${s.n} דירוגים</div>`:'')+(L.length?L.map(r=>`<div class="rvi"><span>${'⭐'.repeat(r.stars)}</span> <small>${new Date(r.created_at).toLocaleDateString('he-IL')}</small>${r.review?`<div>${esc(r.review)}</div>`:''}</div>`).join(''):'<p>עדיין אין ביקורות – היו הראשונים!</p>')}
 window.addEventListener('popstate',e=>{const v=e.state&&e.state.v;if(v==='tour'&&TOUR){$('home').style.display='none';$('setup').classList.add('hidden')}else if(v==='setup'&&$('setup').classList.contains('hidden')){showHome(false)}else{showHome(false)}});
+// ---- v6: spoken narration (Web Speech API, no server audio) ----
+const NARR_KEY='tours_narr_v1';
+const NARR_STYLES=[
+ {id:'neima',name:'נעימה',rate:0.92,pitch:1.05,blurb:'מעט איטית, טון חם'},
+ {id:'regua',name:'רגועה',rate:0.82,pitch:0.92,blurb:'איטית יותר, טון נמוך'},
+ {id:'aliza',name:'עליזה',rate:1.08,pitch:1.15,blurb:'קצת יותר מהירה וגבוהה'},
+ {id:'brura',name:'ברורה',rate:0.86,pitch:1,blurb:'איטית וברורה, נוחה בחוץ'}
+];
+const narr={gen:0,active:false,key:'',queue:[],idx:0,errors:0};
+
+function narrLoad(){
+ let p={};
+ try{p=JSON.parse(localStorage.getItem(NARR_KEY)||'{}')||{}}catch(e){p={}}
+ const style=NARR_STYLES.some(s=>s.id===p.style)?p.style:'neima';
+ return {style,auto:p.auto===false?false:true};
+}
+function narrSave(p){try{localStorage.setItem(NARR_KEY,JSON.stringify({style:p.style,auto:!!p.auto}))}catch(e){}}
+function narrStyle(){const id=narrLoad().style;return NARR_STYLES.find(s=>s.id===id)||NARR_STYLES[0]}
+function narrToast(m){try{if(typeof toast==='function')toast(m)}catch(e){}}
+
+function narrClean(raw){
+ let s=String(raw??'');
+ s=s.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ');
+ s=s.replace(/<br\s*\/?>/gi,' ').replace(/<\/(p|div|li|h[1-6]|tr|blockquote)>/gi,'. ');
+ s=s.replace(/<[^>]+>/g,' ');
+ s=s.replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'");
+ s=s.replace(/&#(\d+);/g,(_,n)=>{const c=+n;return (c>0&&c<=0x10FFFF)?String.fromCodePoint(c):' '});
+ s=s.replace(/&#x([0-9a-f]+);/gi,(_,n)=>{const c=parseInt(n,16);return (c>0&&c<=0x10FFFF)?String.fromCodePoint(c):' '});
+ s=s.replace(/!\[[^\]]*\]\([^)]*\)/g,' ');
+ s=s.replace(/\[([^\]]+)\]\([^)]*\)/g,'$1');
+ s=s.replace(/https?:\/\/\S+/g,' ');
+ s=s.replace(/^\s{0,3}#{1,6}\s+/gm,'').replace(/^\s*[-*+]\s+/gm,'');
+ s=s.replace(/[*_~`]+/g,'');
+ s=s.replace(/\s+/g,' ').trim();
+ return narrPlaceholder(s)?'':s;
+}
+function narrPlaceholder(s){
+ const t=String(s||'').replace(/[\s.!?…׃:：\-–—]+$/g,'').trim();
+ if(!t||t.length<2)return true;
+ return /^(בקרוב|coming soon|todo|tbd|placeholder|n\/a|אין|סרטון( התחנה)?( \(בקרוב\))?)$/i.test(t);
+}
+function narrJoin(label,body){
+ const b=narrClean(body);if(!b)return '';
+ const a=narrClean(label);if(!a)return b;
+ return /[.!?…׃]$/.test(a)?(a+' '+b):(a+'. '+b);
+}
+function narrText(kind,s){
+ if(!s||(kind!=='p'&&kind!=='k'&&kind!=='q'))return '';
+ if(kind==='p')return narrJoin(s.name,s.parents);
+ if(kind==='k')return narrJoin('משימה לילדים',s.kids);
+ return narrJoin('שאלת התבוננות',s.q);
+}
+function narrChunks(text){
+ const bits=String(text||'').split(/(?<=[.!?…׃])\s+/).map(x=>x.trim()).filter(Boolean);
+ const src=bits.length?bits:[String(text||'')];
+ const out=[];let buf='';
+ src.forEach(p=>{const next=buf?buf+' '+p:p;if(buf&&next.length>160){out.push(buf);buf=p}else buf=next});
+ if(buf)out.push(buf);
+ const hard=[];
+ out.forEach(c=>{
+  if(c.length<=220){hard.push(c);return}
+  let rest=c;
+  while(rest.length>180){let i=rest.lastIndexOf(' ',180);if(i<40)i=180;hard.push(rest.slice(0,i).trim());rest=rest.slice(i).trim()}
+  if(rest)hard.push(rest);
+ });
+ return hard.filter(Boolean);
+}
+
+function narrGender(v){
+ const n=((v&&v.name)||'')+' '+((v&&v.voiceURI)||'');
+ const l=n.toLowerCase();
+ if(/carmit|כרמית|hila|הילה|naama|נעמה|female|woman|wavenet-a|wavenet-c|neural2-a|neural2-c|standard-a|standard-c|samantha|victoria|karen|moira|fiona|tessa|zira|susan|serena|allison|ava/.test(l))return 1;
+ if(/asaf|אסף|avri|אברי|\bmale\b|wavenet-b|wavenet-d|neural2-b|neural2-d|\b(daniel|david|alex|fred|rishi)\b/.test(l))return -1;
+ return 0;
+}
+function narrVoiceList(){
+ try{
+  const s=(typeof speechSynthesis!=='undefined')?speechSynthesis:null;
+  return (s&&s.getVoices&&s.getVoices())||[];
+ }catch(e){return []}
+}
+function narrCandidates(langTag){
+ const voices=narrVoiceList();
+ const want=String(langTag||'he').toLowerCase().slice(0,2);
+ const alt=want==='he'?'iw':want;
+ const match=voices.filter(v=>{const l=String(v.lang||'').toLowerCase().replace('_','-');return l.startsWith(want)||l.startsWith(alt)});
+ const pool=match.length?match:voices;
+ const keep=pool.filter(v=>narrGender(v)>=0);
+ const list=(keep.length?keep:pool).slice();
+ list.sort((a,b)=>{
+  const d=narrGender(b)-narrGender(a);if(d)return d;
+  if(!!a.localService!==!!b.localService)return a.localService?-1:1;
+  return String(a.name||'').localeCompare(String(b.name||''));
+ });
+ return list;
+}
+function narrPickVoice(styleId,langTag){
+ const list=narrCandidates(langTag);
+ if(!list.length)return null;
+ if(styleId==='brura')return list.find(v=>v.localService)||list[0];
+ if(styleId==='regua')return list[Math.min(1,list.length-1)];
+ if(styleId==='aliza')return list.length>2?list[2]:list[0];
+ return list[0];
+}
+function narrWantsEnglish(){
+ try{
+  const area=(typeof st!=='undefined'&&st.setup&&st.setup.area)||(typeof TOUR!=='undefined'?TOUR:'');
+  const key=String(area||'');
+  if(key.indexOf('gen:')===0&&typeof GEN!=='undefined'&&GEN){
+   const g=GEN[key.slice(4)];
+   if(g&&g.lang==='en')return true;
+   if(g&&g.lang)return false;
+  }
+  if(typeof st!=='undefined'&&st.setup&&st.setup.lang==='en'&&key.indexOf('gen:')===0)return true;
+ }catch(e){}
+ return false;
+}
+function narrLangTag(){return narrWantsEnglish()?'en-US':'he-IL'}
+
+function narrSync(){
+ if(typeof document==='undefined')return;
+ document.querySelectorAll('button.say').forEach(b=>{
+  const key=b.getAttribute('data-narr')||'';
+  const on=!!(narr.active&&narr.key===key);
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-pressed',on?'true':'false');
+  b.textContent=on?'⏹ הפסק':'🔊 השמע';
+ });
+}
+function narrRefreshPickers(){
+ if(typeof document==='undefined')return;
+ const p=narrLoad(),blurb=narrStyle().blurb;
+ document.querySelectorAll('[data-narr-style]').forEach(el=>el.classList.toggle('on',el.getAttribute('data-narr-style')===p.style));
+ document.querySelectorAll('select.narrsel').forEach(el=>{if(el.value!==p.style)el.value=p.style});
+ document.querySelectorAll('input.narrauto').forEach(el=>{el.checked=!!p.auto});
+ document.querySelectorAll('.narrhint').forEach(el=>{el.textContent=blurb});
+}
+function narrPanelHtml(){
+ const p=narrLoad();
+ const buttons=NARR_STYLES.map(s=>`<button type="button" data-narr-style="${s.id}" class="${p.style===s.id?'on':''}" onclick="narrSetStyle('${s.id}')">${s.name}</button>`).join('');
+ return `<b>🎙️ קול הקריינית</b><div class="seg">${buttons}</div><div class="narrhint">${narrStyle().blurb}</div><label class="narlab"><input type="checkbox" class="narrauto" ${p.auto?'checked':''} onchange="narrSetAuto(this.checked)"> השמעה אוטומטית של ההסבר בכל תחנה</label>`;
+}
+function narrMount(){
+ const el=document.getElementById('narrHome');
+ if(!el)return;
+ el.innerHTML=narrPanelHtml()+'<div class="tm">איכות הקול תלויה במכשיר</div>';
+}
+function narrCardLine(){
+ const p=narrLoad();
+ const opts=NARR_STYLES.map(s=>`<option value="${s.id}"${s.id===p.style?' selected':''}>${s.name}</option>`).join('');
+ return `<div class="narrline"><label>🎙️ קול <select class="narrsel" aria-label="סגנון קול" onchange="narrSetStyle(this.value)">${opts}</select></label><label><input type="checkbox" class="narrauto"${p.auto?' checked':''} onchange="narrSetAuto(this.checked)"> השמעה אוטומטית</label></div>`;
+}
+function narrSayBtn(kind,n){
+ const key=kind+':'+n,on=!!(narr.active&&narr.key===key);
+ return `<button type="button" class="say${on?' on':''}" data-narr="${key}" onclick="narrToggle('${kind}',${n})" aria-pressed="${on?'true':'false'}">${on?'⏹ הפסק':'🔊 השמע'}</button>`;
+}
+function narrParentsBox(s){
+ const btn=narrClean(s&&s.parents)?narrSayBtn('p',s.n):'';
+ return `<div class="box par"><div class="sayrow"><b>👨‍👩‍👧‍👦 להורים:</b>${btn}</div>${(s&&s.parents)||''}</div>`;
+}
+function narrKidsBox(s){
+ if(!s||!s.kids||(typeof kidsOn==='function'&&!kidsOn()))return '';
+ const btn=narrClean(s.kids)?narrSayBtn('k',s.n):'';
+ return `<div class="box kid"><div class="sayrow"><b>🧒 משימה לילדים:</b>${btn}</div>${s.kids}</div>`;
+}
+function narrQBox(s){
+ if(!s||!s.q||!narrClean(s.q)){
+  if(!s||!s.q)return '';
+  return `<div class="box kid"><b>❓ שאלת התבוננות:</b><br>${s.q}</div>`;
+ }
+ return `<div class="box kid"><div class="sayrow"><b>❓ שאלת התבוננות:</b>${narrSayBtn('q',s.n)}</div>${s.q}</div>`;
+}
+
+function narrStop(){
+ const was=narr.active;
+ narr.gen++;narr.active=false;narr.key='';narr.queue=[];narr.idx=0;narr.errors=0;
+ try{
+  const s=(typeof speechSynthesis!=='undefined')?speechSynthesis:null;
+  // cancel() while idle makes Chrome drop the next speak(); only cut real audio
+  if(s&&s.cancel&&(was||s.speaking||s.pending))s.cancel();
+ }catch(e){}
+ narrSync();
+}
+function narrFinish(my){
+ if(my!==narr.gen)return;
+ narr.active=false;narr.key='';narr.queue=[];narrSync();
+}
+function narrWhenVoices(my,cb){
+ const synth=(typeof speechSynthesis!=='undefined')?speechSynthesis:null;
+ const ready=()=>{try{return !!(synth&&synth.getVoices&&synth.getVoices().length)}catch(e){return false}};
+ // Speak in this turn when voices are already loaded so iOS keeps the user gesture.
+ const go=()=>{if(my===narr.gen)cb()};
+ if(!synth||ready()){go();return}
+ let fired=false;
+ const done=()=>{if(fired)return;fired=true;try{synth.removeEventListener&&synth.removeEventListener('voiceschanged',done)}catch(e){}go()};
+ try{synth.addEventListener&&synth.addEventListener('voiceschanged',done)}catch(e){}
+ try{synth.getVoices()}catch(e){}
+ setTimeout(done,400);
+}
+function narrPump(my){
+ if(my!==narr.gen)return;
+ if(!narr.queue||narr.idx>=narr.queue.length){narrFinish(my);return}
+ const chunk=narr.queue[narr.idx++];
+ let u;try{u=new SpeechSynthesisUtterance(chunk)}catch(e){narrFinish(my);return}
+ const tag=narrLangTag(),style=narrStyle();
+ let voice=null;try{voice=narrPickVoice(style.id,tag)}catch(e){voice=null}
+ try{if(voice)u.voice=voice}catch(e){}
+ u.lang=(voice&&voice.lang)?voice.lang:tag;
+ u.rate=Math.min(1.4,Math.max(0.6,style.rate));
+ u.pitch=Math.min(1.5,Math.max(0.7,style.pitch));
+ u.volume=1;
+ u.onend=()=>{if(my===narr.gen)narrPump(my)};
+ u.onerror=ev=>{
+  if(my!==narr.gen)return;
+  const err=ev&&ev.error;
+  if(err==='interrupted'||err==='canceled'||err==='cancelled')return;
+  if(err==='not-allowed'){narrFinish(my);return}
+  narr.errors++;if(narr.errors>4){narrFinish(my);return}
+  narrPump(my);
+ };
+ let started=false;
+ u.onstart=()=>{started=true};
+ try{speechSynthesis.speak(u)}catch(e){narrFinish(my);return}
+ // Chrome sometimes drops a speak() that follows cancel(). Retry once if it never started.
+ setTimeout(()=>{
+  if(my!==narr.gen||started)return;
+  try{if(speechSynthesis.speaking||speechSynthesis.pending)return}catch(e){return}
+  try{
+   const u2=new SpeechSynthesisUtterance(chunk);
+   u2.lang=u.lang;u2.rate=u.rate;u2.pitch=u.pitch;u2.volume=1;
+   try{if(voice)u2.voice=voice}catch(e){}
+   u2.onend=u.onend;u2.onerror=u.onerror;u2.onstart=u.onstart;
+   speechSynthesis.speak(u2);
+  }catch(e){}
+ },200);
+}
+function narrUtter(kind,n,fromUser){
+ let text='';
+ try{text=narrText(kind,(typeof byN==='function')?byN(n):null)}catch(e){text=''}
+ if(!text){if(fromUser)narrToast('אין טקסט להקראה');return}
+ if(typeof speechSynthesis==='undefined'||!speechSynthesis||typeof SpeechSynthesisUtterance!=='function'){
+  if(fromUser)narrToast('ההקראה לא נתמכת בדפדפן הזה');return}
+ narrStop();
+ const my=narr.gen;
+ narr.key=kind+':'+n;narr.active=true;narr.queue=narrChunks(text);narr.idx=0;narr.errors=0;
+ narrSync();
+ narrWhenVoices(my,()=>narrPump(my));
+}
+function narrToggle(kind,n){
+ const key=kind+':'+n;
+ if(narr.active&&narr.key===key){narrStop();return}
+ narrUtter(kind,n,true);
+}
+function narrTourVisible(){
+ try{
+  const home=document.getElementById('home'),setup=document.getElementById('setup');
+  if(home&&home.style.display!=='none')return false;
+  if(setup&&!setup.classList.contains('hidden'))return false;
+  return true;
+ }catch(e){return true}
+}
+function narrAfterCard(prev,n){
+ if(prev===n){narrSync();return}
+ narrStop();
+ if(!narrLoad().auto||!narrTourVisible())return;
+ narrUtter('p',n,false);
+}
+function narrSetStyle(id){
+ if(!NARR_STYLES.some(s=>s.id===id))return;
+ const p=narrLoad();if(p.style===id)return;
+ const cur=narr.active?narr.key:'';
+ p.style=id;narrSave(p);narrRefreshPickers();
+ if(cur){const parts=cur.split(':');narrUtter(parts[0],+parts[1],false)}
+}
+function narrSetAuto(on){
+ const p=narrLoad();p.auto=!!on;narrSave(p);narrRefreshPickers();
+}
+function narrBootVoices(){
+ if(typeof speechSynthesis==='undefined'||!speechSynthesis)return;
+ try{speechSynthesis.getVoices()}catch(e){}
+ try{speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{try{speechSynthesis.getVoices()}catch(e){}})}catch(e){}
+}
+narrBootVoices();
+
 renderChip();history.replaceState({v:'home'},'');showHome(false);loadStats();
 loadTour((st.setup&&TOURS[st.setup.area]&&st.setup.area)||'talpiot');setupGeo();
 </script></body></html>
