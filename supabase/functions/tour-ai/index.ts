@@ -33,15 +33,39 @@ async function fallback(lat:number,lng:number,rad:number){
  return out;
 }
 function pick(all:any[],n:number){for(const rad of [1200,2500,4000,6000]){const P=all.filter(p=>p.d<=rad);if(P.length>=n||rad===6000)return {P,rad}}return {P:all,rad:0}}
-async function findPois(lat:number,lng:number,n:number,cp:any[]){
+const KB_M=1550;
+function kbSplit(raw:any[],lat:number,lng:number){
+ const places:any[]=[],background:any[]=[];
+ for(const e of (Array.isArray(raw)?raw:[]).slice(0,40)){
+  const la=+e?.lat,lo=+e?.lng;
+  if(!e||typeof e.name!=="string"||!e.name||!Number.isFinite(la)||!Number.isFinite(lo))continue;
+  const d=Math.round(dist(lat,lng,la,lo)); if(d>KB_M)continue;
+  const facts=(Array.isArray(e.facts)?e.facts:[]).slice(0,12).map((f:unknown)=>s(f,400)).filter(Boolean);
+  const source=e.source&&typeof e.source==="object"?{title:s(e.source.title,200),author:s(e.source.author,120),publisher:s(e.source.publisher,120),date:s(e.source.date,40),url:s(e.source.url,300)}:null;
+  const item={id:s(e.id,80),name:s(e.name,160),aliases:(Array.isArray(e.aliases)?e.aliases:[]).slice(0,8).map((a:unknown)=>s(a,80)).filter(Boolean),address:s(e.address,200),neighborhood:s(e.neighborhood,80),city:s(e.city,80),facts,story:s(e.story,1200),source,lat:+la.toFixed(6),lng:+lo.toFixed(6),d};
+  if(e.type==="background")background.push(item);else places.push(item);
+ }
+ return {places,background};
+}
+function mergeKb(P:any[],places:any[]){
+ const norm=(x:string)=>String(x||"").replace(/["'«»״]/g,"").replace(/\s+/g," ").trim();
+ const curated=places.map(p=>({name:p.name,name_en:"",name_he:p.name,kind:"curated",desc:p.facts.slice(0,6).join(" · ").slice(0,500),wiki:p.source?.url||"",lat:p.lat,lng:p.lng,d:p.d,curated:true,facts:p.facts,story:p.story,source:p.source,address:p.address,aliases:p.aliases}));
+ const rest=P.filter(p=>!curated.some(c=>dist(c.lat,c.lng,p.lat,p.lng)<45||[c.name,...(c.aliases||[])].some(n=>norm(n)&&norm(n)===norm(p.name))));
+ const all=[...curated,...rest];
+ all.sort((a,b)=>(b.curated?1:0)-(a.curated?1:0)||(b.wiki?1:0)-(a.wiki?1:0)||a.d-b.d);
+ return all.slice(0,60).map((p,i)=>({...p,id:i}));
+}
+async function findPois(lat:number,lng:number,n:number,cp:any[],kbRaw:any[]){
+ const kb=kbSplit(kbRaw,lat,lng);
+ const pack=(P:any[],src:string,rad:number)=>({P:mergeKb(P,kb.places),src:src+((kb.places.length||kb.background.length)?"+knowledge":""),rad,background:kb.background});
  const seen0=new Set<string>();const client=(Array.isArray(cp)?cp:[]).slice(0,120).map((x:any)=>({name:s(x?.name,120),name_en:"",name_he:"",kind:s(x?.kind,40),desc:"",wiki:s(x?.wiki,120),lat:+x?.lat,lng:+x?.lng}))
   .filter((x:any)=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&!seen0.has(x.name)&&seen0.add(x.name)).map((x:any)=>({...x,lat:+x.lat.toFixed(6),lng:+x.lng.toFixed(6),d:Math.round(dist(lat,lng,x.lat,x.lng))})).filter((x:any)=>x.d<=6000);
- if(client.filter((p:any)=>p.d<=4000).length>=n){const {P,rad}=pick(client,n);P.sort((a:any,b:any)=>(b.wiki?1:0)-(a.wiki?1:0)||a.d-b.d);return {P:P.slice(0,60).map((p:any,i:number)=>({...p,id:i})),src:"client-osm",rad}}
+ if(client.filter((p:any)=>p.d<=4000).length>=n){const {P,rad}=pick(client,n);return pack(P,"client-osm",rad)}
  let all=await pois(lat,lng,4000),src="overpass";
  if(client.length){const sn=new Set((all||[]).map(p=>p.name));all=[...(all||[]),...client.filter((p:any)=>!sn.has(p.name))];src=(all.length>client.length?"overpass+":"")+"client-osm"}
  if(!all||all.filter(p=>p.d<=4000).length<Math.min(n,5)){const fb=await fallback(lat,lng,6000);const seen=new Set((all||[]).map(p=>p.name));all=[...(all||[]),...fb.filter(p=>!seen.has(p.name))];src=all.length?"overpass+wikipedia+nominatim":"none"}
- const {P,rad}=pick(all,n);P.sort((a,b)=>(b.wiki?1:0)-(a.wiki?1:0)||a.d-b.d);
- return {P:P.slice(0,60).map((p,i)=>({...p,id:i})),src,rad};
+ const {P,rad}=pick(all||[],n);
+ return pack(P,src,rad);
 }
 async function route(st:any[]){
  const c=st.map(p=>`${p.lng},${p.lat}`).join(";");
@@ -68,14 +92,20 @@ Deno.serve(async req=>{
   const lang=LN[b.lang]?b.lang:"he", dur=[60,90,120].includes(+b.dur)?+b.dur:90, ad=Math.min(10,Math.max(1,+b.adults||2)), kids=Math.min(10,Math.max(0,+b.kids||0));
   const ages=(Array.isArray(b.ages)?b.ages:[]).slice(0,10).map((x:unknown)=>parseInt(String(x))).filter((x:number)=>x>0&&x<18);
   const place=s(b.place,200), n=dur===60?6:dur===90?7:9;
-  dbg.length=0;const {P,src,rad}=await findPois(lat,lng,n,b.pois);
+  dbg.length=0;const {P,src,rad,background}=await findPois(lat,lng,n,b.pois,b.knowledge);
   if(P.length<3) return j({error:"not_enough_places",found:P.length,src,dbg:dbg.slice(0,4)},422);
+  const poiPayload=P.map((p:any)=>{const o:any={id:p.id,name:p.name,name_en:p.name_en,kind:p.kind,desc:p.desc,wiki:p.wiki,dist_m:p.d};if(p.curated){o.curated=true;o.facts=p.facts;o.story=p.story;o.source=p.source;if(p.address)o.address=p.address;if(p.aliases?.length)o.aliases=p.aliases}return o});
+  const hasCurated=P.some((p:any)=>p.curated);
+  const bgNote=background.length?`\nBACKGROUND — trusted city context, NOT stations. Do not assign these a poi_id, do not walk to their coordinates, and do not contradict them. Weave at most one or two sentences into a station only when it genuinely fits, and cite lightly (publisher and year): ${JSON.stringify(background.map((e:any)=>({name:e.name,city:e.city,facts:e.facts,story:e.story,source:e.source,dist_m:e.d})))}\n`:"";
+  const curatedNote=hasCurated?`Curated POIs (curated:true) come from a reviewed local knowledge base and are high priority. Treat their facts, story and source as authoritative: prefer including them when they fit the walk, use those facts in the narration, cite the source lightly once (publisher and year, or author and publisher — not a bibliography), and do not contradict them. Do not add dates, names or numbers that are not in those facts or in well-established public history. If a curated fact conflicts with your general knowledge, follow the curated fact.\n`:"";
+  const onlyFrom=hasCurated?"ONLY from this list of real places (refer by poi_id; never invent places)":"ONLY from this list of real places from OpenStreetMap (refer by poi_id; never invent places)";
+  const parentsRule="90-160 word engaging narration with real, well-established history/facts only. If unsure about a fact, stay general rather than invent dates or numbers."+(hasCurated?" For a curated station, base the narration on the curated facts.":"");
   const prompt=`You are an expert local walking-tour guide. Build a ${dur}-minute urban WALKING tour near "${place||`${lat},${lng}`}" (start point ${lat},${lng}) for ${ad} adults and ${kids} children${ages.length?` aged ${ages.join(", ")}`:""}.
-Choose ${Math.min(n,P.length)} stations (fewer if the area is sparse; include beaches, piers, markets, churches, viewpoints if walkable; skip places requiring a vehicle) ONLY from this list of real places from OpenStreetMap (refer by poi_id; never invent places). Prefer well-known, interesting, publicly accessible places that form a compact walk (total walk ideally under ${dur===60?2:dur===90?3:4} km; dist_m is distance from start) starting near the start point.
-POIS: ${JSON.stringify(P.map(({id,name,name_en,kind,desc,wiki,d})=>({id,name,name_en,kind,desc,wiki,dist_m:d})))}
-Write ALL text in ${LN[lang]}${lang==="he"?" (use local names transliterated to Hebrew, with the original name in parentheses once)":""}. For each station:
+Choose ${Math.min(n,P.length)} stations (fewer if the area is sparse; include beaches, piers, markets, churches, viewpoints if walkable; skip places requiring a vehicle) ${onlyFrom}. Prefer well-known, interesting, publicly accessible places that form a compact walk (total walk ideally under ${dur===60?2:dur===90?3:4} km; dist_m is distance from start) starting near the start point.
+POIS: ${JSON.stringify(poiPayload)}
+${bgNote}${curatedNote}Write ALL text in ${LN[lang]}${lang==="he"?" (use local names transliterated to Hebrew, with the original name in parentheses once)":""}. For each station:
 - name: station title; where: short location hint; dir: walking direction from previous station (first: how to find the start).
-- parents: 90-160 word engaging narration with real, well-established history/facts only. If unsure about a fact, stay general rather than invent dates or numbers.
+- parents: ${parentsRule}
 - kids: ${kids?"a fun, safe 1-2 sentence task for children (look/count/find), suitable for the ages":"empty string"}.
 - q: an observation question for adults. video: one line script idea for a short station video.
 Also return a tour title.`;

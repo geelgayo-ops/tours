@@ -1,5 +1,5 @@
 // ---- v4: home screen, tour cards, new-tour screen, reviews ----
-const CUR=['talpiot','tlv','germancolony','jaffa','mahaneyehuda'];let STATS={},COMM=[],RVT=null;
+const CUR=['talpiot','tlv','germancolony','jaffa','mahaneyehuda','hadar'];let STATS={},COMM=[],RVT=null;
 const km=t=>{const T=TOURS[t];return T&&T.route&&T.route.dist?(T.route.dist/1000).toFixed(1)+' ק"מ':''};
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function loadStats(){if(!SB)return;try{const [a,b]=await Promise.all([SB.from('tour_stats').select('*'),SB.from('tours_generated').select('id,title,place,lat,lng,lang,duration,stations,route,created_at').order('created_at',{ascending:false}).limit(40)]);

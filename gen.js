@@ -3,6 +3,9 @@ function regGen(g){TOURS['gen:'+g.id]={name:g.place||g.title,title:'🌍 '+g.tit
 Object.values(GEN).forEach(regGen);
 function renderMyGen(){$('myGen').innerHTML=Object.values(GEN).map(g=>`<option value="gen:${g.id}">🌍 ${g.title}</option>`).join('');$('myGen').style.display=Object.keys(GEN).length?'':'none'}
 const UA_H={'Accept-Language':'en'};
+function havM(a,b,c,d){const R=6371000,r=Math.PI/180,x=(d-b)*r*Math.cos((a+c)/2*r),y=(c-a)*r;return Math.sqrt(x*x+y*y)*R}
+function knowledgeNear(la,lo){const kb=(typeof KNOWLEDGE==="object"&&KNOWLEDGE)||{},rad=+kb.radius_m||1500;
+ return (kb.entries||[]).filter(e=>e&&e.name&&Number.isFinite(+e.lat)&&Number.isFinite(+e.lng)&&havM(la,lo,+e.lat,+e.lng)<=rad).map(e=>({id:e.id,type:e.type==='background'?'background':'place',name:e.name,aliases:e.aliases||[],lat:+e.lat,lng:+e.lng,city:e.city||'',neighborhood:e.neighborhood||'',address:e.address||'',facts:e.facts||[],story:e.story||'',source:e.source||null}))}
 async function geoSearch(){const q=$('gq').value.trim();if(!q)return;$('gRes').textContent='מחפש…';
  try{const r=await (await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q='+encodeURIComponent(q),{headers:UA_H})).json();
   window._gr=r;$('gRes').innerHTML=r.length?r.map((x,i)=>`<div class="gr" onclick="pickLoc(+_gr[${i}].lat,+_gr[${i}].lon,_gr[${i}].display_name)">📍 ${x.display_name}</div>`).join(''):'לא נמצא – נסו ניסוח אחר באנגלית'}catch(e){$('gRes').textContent='שגיאת חיפוש'}}
@@ -28,7 +31,8 @@ async function clientPois(la,lo){const out=[],seen=new Set(),add=(name,lat,lng,k
 async function genTour(){if(!su.loc){toast('בחרו מיקום נוכחי או חפשו מקום');return null}
  $('busy').style.display='flex';$('busyT').textContent='מחפשים מקומות בסביבה…';
  try{const pois=await clientPois(su.loc.lat,su.loc.lng);$('busyT').textContent='כותבים את ההדרכה לכל תחנה…';
-  const {data,error}=await SB.functions.invoke('tour-ai',{body:{lat:su.loc.lat,lng:su.loc.lng,place:su.loc.name,dur:su.dur,lang:su.lang==='en'?'en':'he',adults:su.adults,kids:su.kids,ages:su.ages,pois}});
+  const knowledge=knowledgeNear(su.loc.lat,su.loc.lng);
+  const {data,error}=await SB.functions.invoke('tour-ai',{body:{lat:su.loc.lat,lng:su.loc.lng,place:su.loc.name,dur:su.dur,lang:su.lang==='en'?'en':'he',adults:su.adults,kids:su.kids,ages:su.ages,pois,knowledge}});
   if(error||!data||data.error){let m=data&&data.error;try{m=m||(await error.context.json()).error}catch(e){}window.__genErr=m||String(error);
    toast(m==='rate_limit'?'הגעתם למגבלת הסיורים היומית – נסו מחר':m==='not_enough_places'?'לא נמצאו מספיק מקומות מעניינים בסביבה – נסו מקום אחר':'יצירת הסיור נכשלה, נסו שוב');return null}
   GEN[data.id]=data;localStorage.setItem(GK,JSON.stringify(GEN));regGen(data);window.__gen=data;return 'gen:'+data.id}
