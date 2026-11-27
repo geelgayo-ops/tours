@@ -68,3 +68,4 @@ t=open('index.html',encoding='utf-8').read()
 assert "VER='tours-6'" in t and '>v6</small>' in t
 t=t.replace("VER='tours-6'","VER='tours-7'",1).replace('>v6</small>','>v7</small>',1)
 open('index.html','w',encoding='utf-8').write(t)
+exec(open('patch6.py',encoding='utf-8').read())
