@@ -12,6 +12,7 @@ const RAW_SAFETY="לפני שיוצאים לדרך\n\nהסיור נעשה בהל
 const RAW_FEEDBACK="המשוב שלכם\n\nתודה שהשתמשתם ב־tripme בתקופת ההרצה. התשובות עוזרות לנו לשפר את הסיורים. אין חובה למלא את כל השדות.\n\n1. איך היה הסיור בסך הכול?\n   (דירוג מ־1 עד 5)\n\n2. מה הכי עבד לכם, או מה הכי אהבתם?\n\n3. מה לא עבד, או מה היה מבלבל?\n\n4. נתקלתם בתקלה או בשגיאה?\n   (כן / לא)\n   אם כן: מה קרה, ובאיזו תחנה או מסך?\n\n5. האם המידע בסיור היה מדויק ומעניין?\n   (כן / חלקית / לא)\n\n6. כשבעתיד ייגבה תשלום, האם הייתם שוקלים לשלם על סיור כזה?\n   (כן / אולי / לא)\n\n7. כמה הייתם מוכנים לשלם על סיור אחד?\n   (עד 10 ₪ / 10–20 ₪ / 20–30 ₪ / יותר מ־30 ₪ / לא הייתי משלם)\n\n8. עוד משהו שתרצו לספר לנו?\n   אם נוכל לחזור אליכם, אפשר להשאיר מייל (לא חובה): ________\n\nהערה בתחתית הטופס:\nהמשוב משמש רק לשיפור tripme. אם השארתם מייל, נשתמש בו רק כדי לחזור אליכם בנוגע למשוב הזה.\n";
 const RAW_ACCESS="הצהרת נגישות של tripme\nעודכן לאחרונה: [תאריך]\n\ntripme, המופעלת על ידי גיל אלמליח (עוסק פטור מס' 069705846), רואה חשיבות במתן שירות שוויוני לכל המשתמשים, לרבות אנשים עם מוגבלות. אנחנו פועלים להנגשת האפליקציה לפי חוק שוויון זכויות לאנשים עם מוגבלות, התשנ\"ח-1998, לפי תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע\"ג-2013, ולפי התקן הישראלי ת״י 5568, המבוסס על הנחיות WCAG 2.0.\n\nרמת ההתאמה\nהאפליקציה הונגשה בהתאמה [מלאה / חלקית] לת״י 5568, ברמה [AA].\n[אין לציין רמה או התאמה מלאה לפני שנעשתה בדיקה.]\n\nהתאמות הנגישות שבוצעו\nיש להשאיר כאן רק מה שבוצע ונבדק בפועל, למשל:\n• [הדרכה קולית לצד הטקסט בכל תחנה]\n• [אפשרות להגדיל טקסט עד 200% בלי שבירת התצוגה]\n• [ניגודיות צבעים לפי התקן]\n• [שמות ותוויות נגישים לכפתורים, לקישורים ולשדות]\n• [תמיכה בקורא מסך וניווט במקלדת]\n• [תמיכה בעברית מימין לשמאל]\n\nאיך נבדקה הנגישות\nהאפליקציה נבדקה ביום [תאריך הבדיקה], ב[בדיקה ידנית / כלים אוטומטיים / שניהם], בדפדפנים [שמות] ובקורא מסך [שם]. [אם הבדיקה נעשתה על ידי גורם מוסמך, ציינו זאת.]\n\nמגבלות ידועות וחלופות\n[פרטו חלקים שעדיין אינם נגישים, ומתי צפוי תיקון. אם אין עדיין מידע, אל תכתבו שהכול נגיש.]\nדוגמאות אפשריות לבדיקה:\n• רכיב המפה הוא שירות חיצוני ועשוי להיות מוגבל לקורא מסך. תוכן הסיור זמין גם כטקסט וכהדרכה קולית.\n• חלק מהמסלולים בשטח כוללים מדרגות, מדרכות צרות או מכשולים, ואיננו יכולים להבטיח את נגישות המסלול עצמו. אם מסלול אינו מתאים לכם, אל תמשיכו בו.\n[אם ניתן פטור בשל קושי טכנולוגי, יש לפרסם כאן את הפטור ואת ההתאמה החלופית.]\n\nדיווח על בעיית נגישות ובקשת הנגשה\nנתקלתם ברכיב שאינו נגיש, או שאתם צריכים את המידע או את השירות בדרך נגישה אחרת? נשמח שתפנו אלינו. כדאי לציין את המסך או הסיור, את הבעיה, ואת הדפדפן או הטכנולוגיה המסייעת שבה השתמשתם.\n\nרכז/ת נגישות או איש הקשר לנושא: [שם]\nטלפון: [מספר טלפון]\nדוא״ל: [כתובת מייל, למשל tripme.walking@gmail.com]\nכתובת למשלוח דואר: האלוף דוד 13, ראשון לציון 7564042\n\nנשתדל להשיב בתוך [מספר] ימי עסקים.\n\nתאריך עדכון ההצהרה: [תאריך]\n";
 const EN_BANNER='tripme beta: use is free for now. A fee will be charged in the future, and we will let you know ahead of time.';
+const SHOW_ACCESS=false;
 const H2=new Set(['רמת ההתאמה','התאמות הנגישות שבוצעו','איך נבדקה הנגישות','מגבלות ידועות וחלופות','דיווח על בעיית נגישות ובקשת הנגשה']);
 const DOC_TITLE={terms:'תנאי שימוש',privacy:'מדיניות פרטיות',access:'הצהרת נגישות',feedback:'המשוב שלכם'};
 
@@ -242,7 +243,7 @@ function docHtml(id){
   return '';
 }
 function openBetaDoc(id){
-  if(!DOC_TITLE[id]) return;
+  if(!DOC_TITLE[id]||(id==='access'&&!SHOW_ACCESS)) return;
   pageOpener=document.activeElement;
   if(typeof hideAll==='function') hideAll();
   const page=el('betaPage');
@@ -345,7 +346,7 @@ function addHomeLinks(){
   const nav=document.createElement('nav');
   nav.className='beta-foot';
   nav.setAttribute('aria-label','מידע');
-  nav.innerHTML=`<button type="button" onclick="openBetaDoc('terms')">תנאי שימוש</button><button type="button" onclick="openBetaDoc('privacy')">מדיניות פרטיות</button><button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button>`;
+  nav.innerHTML=`<button type="button" onclick="openBetaDoc('terms')">תנאי שימוש</button><button type="button" onclick="openBetaDoc('privacy')">מדיניות פרטיות</button>`+(SHOW_ACCESS?`<button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button>`:'');
   const sub=home.querySelector('div[style*="color:#555"]');
   if(sub) sub.insertAdjacentElement('afterend', nav);
   else home.appendChild(nav);
@@ -357,7 +358,7 @@ function addMenuLinks(){
   box.innerHTML=`<b>מידע</b>
     <div class="row"><button type="button" onclick="openBetaDoc('terms')">תנאי שימוש</button></div>
     <div class="row"><button type="button" onclick="openBetaDoc('privacy')">מדיניות פרטיות</button></div>
-    <div class="row"><button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button></div>
+    ${(SHOW_ACCESS?`<div class="row"><button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button></div>`:'')}
     <div class="row"><button type="button" onclick="openFb()">💬 משוב</button></div>`;
   const h2=menu.querySelector('h2');
   if(h2) h2.insertAdjacentElement('afterend', box);
@@ -389,7 +390,7 @@ function mount(){
       <nav class="beta-foot" aria-label="מסמכים">
         <button type="button" onclick="openBetaDoc('terms')">תנאי שימוש</button>
         <button type="button" onclick="openBetaDoc('privacy')">מדיניות פרטיות</button>
-        <button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button>
+        ${(SHOW_ACCESS?`<button type="button" onclick="openBetaDoc('access')">הצהרת נגישות</button>`:'')}
         <button type="button" onclick="openFb()">💬 משוב</button>
       </nav>
     </div><div class="actions"><button type="button" class="pri" id="betaPopOk">הבנתי</button></div></div>`;
