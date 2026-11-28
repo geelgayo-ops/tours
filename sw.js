@@ -1,4 +1,4 @@
-const C='tours-v8',F=['./','index.html','manifest.json','icon-192.png','icon-512.png','beta.js'];
+const C='tours-v10',F=['./','index.html','manifest.json','icon-192.png','icon-512.png','beta.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F.map(u=>new Request(u,{cache:'reload'})))));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 // network-first (bypassing HTTP cache) for same-origin app files; cache only as offline fallback. Never touches API/auth calls.
