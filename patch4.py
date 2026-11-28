@@ -6,7 +6,7 @@ R('<input type="text" id="hq" placeholder="🔍 חיפוש סיור לפי מק�
 '<div class="fld" style="margin-top:14px"><b>📋 בחרו סיור מוכן</b><select id="hSel" onchange="renderHome()"></select><div id="hList"></div></div>')
 R('<small style="color:#999">v4</small>','<small style="color:#999">v5</small>')
 R("VER='tours-4'","VER='tours-5'")
-R("function renderHome(){",r"""const CITY={talpiot:'חיפה – שוק תלפיות',tlv:'תל אביב – העיר הלבנה',germancolony:'חיפה – המושבה הגרמנית',hadar:'חיפה – הדר הכרמל',jaffa:'תל אביב-יפו – יפו העתיקה',mahaneyehuda:'ירושלים – שוק מחנה יהודה',telaviv_hanukkah:'תל אביב – חנוכה בעיר',haifa_hanukkah:'חיפה – החג של החגים'};
+R("function renderHome(){",r"""const CITY={talpiot:'חיפה – שוק תלפיות',tlv:'תל אביב – העיר הלבנה',germancolony:'חיפה – המושבה הגרמנית',hadar:'חיפה – הדר הכרמל',jaffa:'תל אביב-יפו – יפו העתיקה',mahaneyehuda:'ירושלים – שוק מחנה יהודה',jerusalem_hanukkah:'ירושלים – אור בעיר העתיקה',telaviv_hanukkah:'תל אביב – חנוכה בעיר',haifa_hanukkah:'חיפה – החג של החגים'};
 function dname(k){if(CITY[k])return CITY[k];const T=TOURS[k];const pl=String(T.name||'').split(',')[0].trim();return pl+' – '+String(T.title).replace(/^🌍\s*/,'')}
 function renderHome(){const sel=$('hSel'),cur=sel.value;
  const grp=(lab,ks)=>{ks=ks.filter(k=>TOURS[k]).sort((a,b)=>dname(a).localeCompare(dname(b),'he'));return ks.length?`<optgroup label="${lab}">`+ks.map(k=>`<option value="${k}">${esc(dname(k))}</option>`).join('')+'</optgroup>':''};
