@@ -1,5 +1,5 @@
 const GK='tours_gen_v1';let GEN=JSON.parse(localStorage.getItem(GK)||'{}');
-function regGen(g){TOURS['gen:'+g.id]={name:g.place||g.title,title:'🌍 '+g.title,stations:g.stations,route:g.route?{coords:g.route.coords,dist:g.route.dist}:null,gen:1};AREAS['gen:'+g.id]=g.place||g.title}
+function regGen(g){TOURS['gen:'+g.id]={name:g.place||g.title,title:'🌍 '+g.title,stations:g.stations,route:g.route?{coords:g.route.coords,dist:g.route.dist}:null,gen:1,lat:g.lat,lng:g.lng};AREAS['gen:'+g.id]=g.place||g.title}
 Object.values(GEN).forEach(regGen);
 function renderMyGen(){$('myGen').innerHTML=Object.values(GEN).map(g=>`<option value="gen:${g.id}">🌍 ${g.title}</option>`).join('');$('myGen').style.display=Object.keys(GEN).length?'':'none'}
 const UA_H={'Accept-Language':'en'};
