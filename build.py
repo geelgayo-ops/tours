@@ -1,7 +1,7 @@
 import re,json
 t=open('template.html').read()
 D='data/'
-for tag,f in [('S','stations'),('R','route'),('S2','tlv_stations'),('R2','tlv_route'),('S3','germancolony_stations'),('R3','germancolony_route'),('S4','jaffa_stations'),('R4','jaffa_route'),('S5','mahaneyehuda_stations'),('R5','mahaneyehuda_route'),('S6','hadar_stations'),('R6','hadar_route'),('K','knowledge')]:
+for tag,f in [('S','stations'),('R','route'),('S2','tlv_stations'),('R2','tlv_route'),('S3','germancolony_stations'),('R3','germancolony_route'),('S4','jaffa_stations'),('R4','jaffa_route'),('S5','mahaneyehuda_stations'),('R5','mahaneyehuda_route'),('S6','hadar_stations'),('R6','hadar_route'),('S7','jerusalem_hanukkah_stations'),('R7','jerusalem_hanukkah_route'),('K','knowledge')]:
     t=t.replace('/*%s*/'%tag,json.dumps(json.load(open(D+f+'.json')),ensure_ascii=False))
 R=lambda a,b:globals().__setitem__('t',t.replace(a,b,1)) if a in t else (_ for _ in ()).throw(Exception('miss '+a[:40]))
 R('<title>סיור משפחתי – שוק תלפיות</title>','<title>סיורים – הדרכה בהליכה</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#c2410c"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>')
